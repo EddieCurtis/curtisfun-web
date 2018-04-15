@@ -1,0 +1,91 @@
+{{define "pgp"}}
+<html>
+{{template "header"}}
+<body>
+{{template "navigation"}}
+<h1>{{.Title}}</h1>
+<script language="Javascript" src="/static/js/openpgp.js" type="text/javascript"></script>
+<script language="Javascript" type="text/javascript">
+    async function encrypt() {
+        var pubkey = document.getElementById("encryptPgpKeyInput").value;
+
+        var options = {
+            data: document.getElementById("encryptPgpMessage").value,
+            publicKeys: openpgp.key.readArmored(pubkey).keys
+        };
+
+        openpgp.encrypt(options).then(function (ciphertext) {
+            document.getElementById("encryptPgpMessage").value = ciphertext.data; // '-----BEGIN PGP MESSAGE ... END PGP MESSAGE-----'
+        });
+    }
+
+    async function decrypt() {
+        var privkey = document.getElementById("decryptPgpKeyInput").value;
+        var passphrase = document.getElementById("decryptPassword").value;
+
+        var privKeyObj = openpgp.key.readArmored(privkey).keys[0];
+        await privKeyObj.decrypt(passphrase);
+
+        var options = {
+            message: openpgp.message.readArmored(document.getElementById("decryptPgpMessage").value),
+            privateKeys: privKeyObj
+        };
+
+        openpgp.decrypt(options).then(function (ciphertext) {
+            document.getElementById("decryptPgpMessage").value = ciphertext.data; // '-----BEGIN PGP MESSAGE ... END PGP MESSAGE-----'
+        });
+    }
+
+    function selectTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+</script>
+
+<div class="tab">
+    <button class="tablinks" onclick="selectTab(event, 'Encrypt')" id="defaultTab">Encrypt</button>
+    <button class="tablinks" onclick="selectTab(event, 'Decrypt')">Decrypt</button>
+</div>
+
+<div id="Encrypt" class="tabcontent">
+    <form action="javascript:encrypt();">
+        PGP public key: <br/><textarea rows="10" id="encryptPgpKeyInput"></textarea>
+        <br/>
+        Message: <br/><textarea rows="15" id="encryptPgpMessage"></textarea>
+        <br/>
+        <input type="submit" value="Submit">
+    </form>
+</div>
+
+<div id="Decrypt" class="tabcontent">
+    <form action="javascript:decrypt();">
+        PGP private key: <br/><textarea rows="10" id="decryptPgpKeyInput"></textarea>
+        <br/>
+        Password: <br/><input type="password" id="decryptPassword">
+        <br/>
+        Message: <br/><textarea rows="15" id="decryptPgpMessage"></textarea>
+        <br/>
+        <input type="submit" value="Submit">
+    </form>
+</div>
+
+<script>
+    document.getElementById("defaultTab").click();
+</script>
+
+</body>
+</html>
+{{end}}

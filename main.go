@@ -25,12 +25,19 @@ func render(w http.ResponseWriter, p *Page) {
 	}
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	p, _ := createPage("index")
 	render(w, p)
 }
 
+func pgpHandler(w http.ResponseWriter, r *http.Request) {
+	p, _ := createPage("pgp")
+	render(w, p)
+}
+
 func main() {
-	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/pgp", pgpHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
